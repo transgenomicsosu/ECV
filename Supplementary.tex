@@ -1,0 +1,634 @@
+ \documentclass[12pt, a4paper, bibliography=totoc]{scrartcl}
+
+%%%%% INPUT AND LANGUAGE %%%%%
+\usepackage[latin9]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{microtype}
+\usepackage{xspace}
+\usepackage[english]{babel}
+
+%%%%% GENERAL UTILITIES %%%%%
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{amsthm}
+\usepackage{multicol}
+\usepackage{enumitem}
+\usepackage{mathtools}
+\usepackage{array}
+\usepackage[hidelinks]{hyperref}
+\usepackage{nameref}
+\usepackage{breakcites}
+\usepackage[margin=10pt,font={footnotesize},labelfont={sf,bf}]{caption}
+\usepackage[affil-it]{authblk}
+\usepackage{setspace}
+\doublespacing
+\usepackage{natbib}
+\bibliographystyle{apalike}
+\setcitestyle{aysep={}}
+\usepackage{algorithm}
+\usepackage{algorithmic}
+% \usepackage{lipsum} % <-- for generating dummy text
+%%%%%%%%% USER ADDED PACKAGES %%%%%%%%%%%
+\usepackage{xcolor,soul}
+%%%%% FONTS %%%%%
+\usepackage{cmbright}
+\usepackage[nomath]{lmodern}
+\usepackage{inconsolata}
+\usepackage{bm}
+\DeclareMathAlphabet{\mathsfit}{T1}{\sfdefault}{\mddefault}{\sldefault}
+\SetMathAlphabet{\mathsfit}{bold}{T1}{\sfdefault}{\bfdefault}{\sldefault}
+\newcommand{\mathbif}[1]{\bm{\mathsfit{#1}}}
+
+\makeatletter
+\patchcmd{\@maketitle}{\LARGE \@title}{\fontsize{16}{19.2}\selectfont\@title}{}{}
+\renewcommand\AB@affilsepx{\ \protect\Affilfont}
+\makeatother
+\renewcommand\Authfont{\fontsize{16}{19.2}\selectfont}
+\renewcommand\Affilfont{\fontsize{14}{16.8}\itshape}
+
+%%%%% CONSTRAIN FLOATS TO SUBSECTIONS %%%%%
+\usepackage[section]{placeins}
+\makeatletter
+\AtBeginDocument{%
+    \expandafter\renewcommand\expandafter\subsection\expandafter{%
+        \expandafter\@fb@secFB\subsection
+    }%
+}
+\makeatother
+
+
+%%%%% Editorial commands
+\newcommand{\pouya}[1]{{\color{orange} #1}}
+\newcommand{\charles}[1]{{\color{green} #1}}
+\newcommand{\bb}[1]{{\color{purple} #1}}
+\newcommand{\alert}{\textcolor{red}}
+\newcommand{\blue}{\textcolor{blue}}
+\usepackage{changes} % track changes
+
+%%%%% COLUMN OF NUMBERS %%%%%
+\usepackage{silence}
+\WarningsOff[everypage]
+\usepackage{tikz, everypage}
+\usetikzlibrary{
+  calc,
+  shapes,
+  arrows.meta,
+  decorations.pathreplacing,
+}
+
+\AtBeginDocument{%
+  \AddEverypageHook{%
+    \begin{tikzpicture}[remember picture,overlay]
+      \path (current page.north west) --  (current page.south west) \foreach \i in {1,...,\fakelinenos} { node [pos={0}, yshift={12pt -\i * 24.82pt}, xshift=\fakelinenoshift, line number style] {\i} }  ;
+    \end{tikzpicture}%
+  }%
+}
+\tikzset{%
+  line numbers/.store in=\fakelinenos,
+  line numbers=40,
+  line number shift/.store in=\fakelinenoshift,
+  line number shift=5mm,
+  line number style/.style={text=gray},
+}
+
+%%%%% Theorem-like environments%%%%%
+\newtheorem{theorem}{Theorem}
+\newtheorem{lemma}{Lemma}
+\newtheorem{corollary}{Corollary}
+\newtheorem{proposition}{Proposition}
+\newtheorem{problem}{Problem}
+\newtheorem{definition}{Definition}
+\newtheorem{assumption}{Assumption}
+\newtheorem{example}{Example}
+\newtheorem{remark}{Remark}
+\newtheorem{conjecture}{Conjecture}
+
+\makeatletter
+\let\saveqed\qed
+\renewcommand\qed{%
+   \ifmmode\displaymath@qed
+   \else\saveqed
+   \fi}
+   
+
+%%%%% CUSTOM DEFINITIONS %%%%%
+\setcapindent{0pt}
+\DeclareMathOperator*{\gam}{gam}
+\DeclareMathOperator*{\loss}{loss}
+\DeclareMathOperator*{\PCV}{PCV}
+\DeclareMathOperator*{\ECV}{ECV}
+\DeclareMathOperator*{\argmaxB}{argmax} 
+\newcommand{\Iscr}{\mathcal{I}}
+\newcommand{\Cscr}{\mathcal{C}}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\title{Supplementary Information: Optimizing expected cross value for genetic introgression}
+\date{}
+
+\author[1]{Pouya Ahadi}
+\author[2]{Balabhaskar Balasundaram}
+\author[2]{Juan S. Borrero}
+\author[3]{Charles Chen\thanks{Corresponding author: charles.chen@okstate.edu}}
+
+
+
+\affil[1]{H.~Milton Stewart School of
+Industrial and Systems Engineering, Georgia Institute of Technology, Atlanta, Georgia, USA.}
+
+\affil[2]{School of Industrial Engineering and Management, Oklahoma State University, Stillwater, Oklahoma, USA.}
+
+\affil[3]{Department of Biochemistry and Molecular Biology, Oklahoma State University, Stillwater, Oklahoma, USA.}
+
+
+%%% HELPER CODE FOR DEALING WITH EXTERNAL REFERENCES
+\hypersetup{nolinks=true}
+\usepackage{xr}
+\makeatletter
+\newcommand*{\addFileDependency}[1]{
+  \typeout{(#1)}
+  \@addtofilelist{#1}
+  \IfFileExists{#1}{}{\typeout{No file #1.}}
+}
+\makeatother
+
+\newcommand*{\myexternaldocument}[1]{
+    \externaldocument{#1}
+    \addFileDependency{#1.tex}
+    \addFileDependency{#1.aux}
+}
+\myexternaldocument{main}
+%%% END HELPER CODE
+
+\begin{document}
+\selectlanguage{english}
+
+% %%%%% Custom Labels %%%%%
+
+% \makeatletter
+% \newcommand{\customlabel}[2]{%
+%   \protected@write \@auxout {}{\string \newlabel {#1}{{#2}{\thepage}{#2}{#1}{}} }%
+%   \hypertarget{#1}{#2}
+% }
+% \makeatother
+% %%% LABELS %%%
+% \customlabel{prop.inherit_dist}{2.1}
+% \customlabel{prop.pcv_proof}{2.2}
+% \customlabel{thm.ecv}{2.1}
+% \customlabel{prop.P_subsets}{2.3}
+% \customlabel{prop.P_dominant}{2.4}
+% \customlabel{prop.P}{2.5}
+% \customlabel{eq:inheritance_dist_other_copms1}{4}
+% \customlabel{eq:inheritance_dist_other_copms2}{5}
+% \customlabel{eq:phi_init}{5}
+% \customlabel{eq:phi_recurse}{6}
+% \customlabel{eq:ecv_with_loss_func}{20}
+% \customlabel{eq:gamete_func2}{15}
+% \customlabel{eq:ecv_formula}{21}
+% %%%%%%%%%%%%%%%
+\maketitle
+\section*{Proofs}
+\subsection*{Proof of Proposition~\ref{prop.inherit_dist}}
+We model the random vector $J$ that follows an inheritance distribution as a discrete time Markov chain (DTMC) with $J=\bigl\{J_n\colon n\ge 0\bigr\}$ where $J_n$ represents the state of the process at $n$-th step, i.e., the value of the random vector $J$ in the $n$-th position, with the state space $\{0,1\}$. This process is not a time-homogeneous DTMC. According to Equation~\eqref{eq:inheritance_dist_other_copms1} in the main article, the transition probability matrix from step $k$ to step $k+1$ is as follows:
+
+\setcounter{equation}{20}
+\begin{align*} %\label{eq:P_k:k+1}
+ P_{k:k+1} &=
+\bordermatrix{ & 0 & 1\cr
+0& 1-r_k&r_k\cr
+1& r_k&1-r_k
+} & \text{$\forall k \in [N-1]$}.   
+\end{align*}
+
+The transition probability matrix from the first step 1 to step $i \in [N-1]$ is then given by:
+% \[
+% P_{1:i}=
+% \begin{bmatrix}
+% 1-r_1&r_1\\
+% r_1&1-r_1
+% \end{bmatrix} \begin{bmatrix}
+% 1-r_2&r_2\\
+% r_2&1-r_2
+% \end{bmatrix} \text{\dots}\begin{bmatrix}
+% 1-r_{i-1}&r_{i-1}\\
+% r_{i-1}&1-r_{i-1}
+% \end{bmatrix},
+% \]
+% in other words:
+\[
+P_{1:i}=\prod_{k=1}^{i-1} P_{k:k+1}.
+\]
+We claim that:
+\begin{align}\label{eq:P_1:i}
+ P_{1:i}=
+\begin{bmatrix}
+1-\phi_i(r)&\phi_i(r)\\
+\phi_i(r)&1-\phi_i(r)
+\end{bmatrix},   
+\end{align}
+where $\phi_i(r)$ is defined in Equations~\eqref{eq:phi_init} and~\eqref{eq:phi_recurse} in the main article. We prove this claim by induction on $i$.
+The claim holds for the base case $i=2$ by definition, because according to Equation~\eqref{eq:phi_init} in the main article,  $\phi_2(r)=r_1$. 
+% , therefore:
+% \[
+% P_{1:2}=
+% \begin{bmatrix}
+% 1-r_1&r_1\\
+% r_1&1-r_1
+% \end{bmatrix}.
+% \]
+% This result is identical to the definition of transition probability matrix $P_{1:2}$.
+Let us suppose Equation~\eqref{eq:P_1:i} holds for step $i=n$. By induction hypothesis, we know that:
+\[
+ P_{1:n}=
+\begin{bmatrix}
+1-\phi_{n}(r)&\phi_{n}(r)\\
+\phi_{n}(r)&1-\phi_{n}(r)
+\end{bmatrix}.
+\]
+As  
+ $P_{1:n+1}=P_{1:n}P_{n:n+1}$, we obtain the following:
+ \begin{align*}
+    \nonumber P_{1:n+1}&=
+     \begin{bmatrix}
+    1-\phi_{n}(r)&\phi_{n}(r)\\
+    \phi_{n}(r)&1-\phi_{n}(r)
+    \end{bmatrix}
+    \begin{bmatrix}
+    1-r_n&r_n\\
+    r_n&1-r_n
+    \end{bmatrix}\\
+    &=
+    \begin{bmatrix}
+    1-r_n-\phi_n(r)+2r_n\phi_n(r)&r_n-2r_n\phi_n(r)+\phi_n(r)\\
+    r_n-2r_n\phi_n(r)+\phi_n(r)&1-r_n-\phi_n(r)+2r_n\phi_n(r)
+    \end{bmatrix}.\\
+    & = \begin{bmatrix}
+1-\phi_{n+1}(r)&\phi_{n+1}(r)\\
+\phi_{n+1}(r)&1-\phi_{n+1}(r)
+\end{bmatrix},
+    \label{eq:P_1:n+1_induction}
+ \end{align*}
+ establishing the claim in Equation~\eqref{eq:P_1:i}.
+% From Equation~\eqref{eq:phi_recurse} we have:
+% \begin{align} \label{eq:phi_n+1-phi_n}
+%     \phi_{n+1}(r)-\phi_{n}(r)=r_n-2r_n\phi_{n}(r).
+% \end{align}
+% From Equations~\eqref{eq:P_1:n+1_induction} and~\eqref{eq:phi_n+1-phi_n} we establish the claim in Equation~\eqref{eq:P_1:i}:
+% \begin{align*}
+%      P_{1:n+1}=
+% \begin{bmatrix}
+% 1-\phi_{n+1}(r)&\phi_{n+1}(r)\\
+% \phi_{n+1}(r)&1-\phi_{n+1}(r)
+% \end{bmatrix}.
+% \end{align*}
+% which means that the claim holds for $i=n+1$.
+
+The DTMC $J$ satisfies the following property~\citep{kulkarni2016}:
+\begin{align}
+    \Pr(J_i=j) &=\left(\alpha^\top P_{1:i}\right)_j &  \forall i \in\{2,3,\ldots,N\}, j\in \{0,1\},
+\end{align}where $\alpha^\top =[\alpha_0,\alpha_1]$ is the vector of initial probabilities and $\left(\alpha^\top P_{1:i}\right)_j$ denotes the $(j+1)$-th component of the row vector $\alpha^\top P_{1:i}$. Thus, for every $i \in \{2,3,\ldots,N\}$,
+\begin{align}
+   \nonumber \begin{bmatrix}
+    \Pr(J_i=0)\\
+    \Pr(J_i=1)
+    \end{bmatrix}^\top =
+    \begin{bmatrix}
+    \alpha_0\\
+    \alpha_1
+    \end{bmatrix}^\top 
+    \begin{bmatrix}
+    1-\phi_{i}(r)&\phi_{i}(r)\\
+    \phi_{i}(r)&1-\phi_{i}(r)
+    \end{bmatrix}
+    =
+    \begin{bmatrix}
+    \alpha_0+(\alpha_1-\alpha_0)\phi_i(r)\\
+    \alpha_1+(\alpha_0-\alpha_1)\phi_i(r) 
+    \end{bmatrix}^\top.
+\end{align}
+Proposition~\ref{prop.inherit_dist} follows by noting that $\alpha_0 + \alpha_1 = 1$. 
+\qed
+
+%%%%%%%%%%%%%%%%%%%%%%%%%
+% \subsection*{Proof of Proposition~\ref{prop.pcv_proof}}
+
+% \hl{Pouya and Charles: this proposition has been commented out in the main file and doesn't appear anywhere? Is the plan to state and prove the proposition in the supplement? It is an important result, but needn't be in the main paper.}
+
+% \pouya{The proof in the discussion is different with the proof in this part.}
+% We define the random variable $X$, which counts the number of QTL at which the aforementioned failure occurs during transmission of alleles from selected individuals to $g^3$. Obviously, $X$ follows Binomial distribution as $X \sim B(N,\alpha^4)$.
+
+% As one failure is enough for making PCV equal to zero, we are interested in finding the probability that at least one failure event occurs.
+% \begin{align}
+% \label{eq:pcv_prob}
+% \Pr(X \ge 1)= 1-\Pr(X=0)=1-(1-\alpha^4)^N 
+% \end{align}
+% As $N \to +\infty$, the probability in~\eqref{eq:pcv_prob} converges to the value of one as long as $\alpha>0$. In other words,
+% \begin{align}\label{eq:pcv_prob_converge}
+% \lim_{N \to +\infty} \Pr(X \ge 1) = 1,
+% \end{align}
+% which implies the correctness of Proposition~\ref{prop.pcv_proof}.
+% \qed
+%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection*{Proof of Theorem~\ref{thm.ecv}}
+We use the definition in Equation~\eqref{eq:ecv_with_loss_func} in the main article to find a closed-form expression for the ECV.  Let $L^1$ and $L^{2}$ be the genotype matrices for the selected pair of individuals, and let $J^1$ ,$J^2$ and $J^3$ be  three independent samples from the inheritance distribution. We know that
+$g^{3} = \gam\left(\big[g^{1}, g^{2}\big],J^3\right)$ where $g^{1} = \gam\big(L^{1},J^1\big)$ and $g^{2} = \gam\big(L^{2},J^2\big)$. Based on the definition of inheritance distribution in Definition~\ref{defn.gamete_func} in the main article, we have,
+\begin{align}
+    g^{1}_i &= L^{1}_{i,1}(1-J_i^1)+L^{1}_{i,2}J_i^1& \forall i \in [N], \label{eq:g1}\\
+    g^{2}_i &= L^{2}_{i,1}(1-J_i^2)+L^{2}_{i,2}J_i^2 & \forall i \in [N], \text{ and, } \label{eq:g2}\\
+    g^{3}_i &= g^{1}_{i}(1-J_i^3)+g^{2}_{i}J_i^3 &  \forall i \in [N].\label{eq:g3}
+\end{align}
+Substitutions in Equation~\eqref{eq:g3} using Equations~\eqref{eq:g1} and~\eqref{eq:g2} yields the expected cross value for the target trait as:
+\begin{align*}
+\nonumber \mathbb{E}\left(\sum_{i=1}^{N}g_i^{3}\right)&=\mathbb{E}\left(\sum_{i=1}^{N}\left[L^{1}_{i,1}(1-J_i^1)+L^{1}_{i,2}J_i^1\right](1-J^3_i)+\left[ L^{2}_{i,1}(1-J_i^2)+L^{2}_{i,2}J_i^2\right]J^3_i\right)\\
+\nonumber &=\mathbb{E}\left(\sum_{i=1}^{N}L^{1}_{i,1}+\big(L^{1}_{i,2}-L^{1}_{i,1}\big)J_i^1-L^{1}_{i,1}J^3_i-\big(L^{k,}_{i,2}-L^{1}_{i,1}\big)J^1_iJ^3_i+\right.\\ \nonumber& \qquad 
+L^{2}_{i,1}J^3_i+\big(L^{2}_{i,2}-L^{2}_{i,1}\big)J^2_iJ^3_i \Bigg)\\
+\nonumber &=\sum_{i=1}^{N}\left[L^{1}_{i,1}+\big(L^{1}_{i,2}-L^{1}_{i,1}\big)\mathbb{E}(J_i^1)-L^{1}_{i,1}\mathbb{E}(J^3_i)-\big(L^{1}_{i,2}-L^{1}_{i,1}\big)\mathbb{E}(J^1_iJ^3_i)+\right.\\
+&\qquad \left. L^{2}_{i,1}\mathbb{E}(J^3_i)+\big(L^{2}_{i,2}-L^{2}_{i,1}\big)\mathbb{E}(J^2_iJ^3_i)\right].
+\end{align*}
+From Proposition~\ref{prop.inherit_dist} we know that,
+\begin{align*}
+     \mathbb{E}(J_i^1)=\mathbb{E}(J_i^2)=\mathbb{E}(J_i^3) &=     \alpha_1+(\alpha_0-\alpha_1)\phi_i(r) & \forall i \in [N].
+\end{align*}
+As $J^1$, $J^2$ and $J^3$ are independent, we know that,
+\begin{align*}
+     \mathbb{E}(J_i^1J_i^3)& =\mathbb{E}(J_i^1) \mathbb{E}(J_i^3) = (    \alpha_1+(\alpha_0-\alpha_1)\phi_i(r))^2 & \forall i \in [N],\\
+      \mathbb{E}(J_i^2J_i^3)& =\mathbb{E}(J_i^2) \mathbb{E}(J_i^3) = (    \alpha_1+(\alpha_0-\alpha_1)\phi_i(r))^2 & \forall i \in [N].
+\end{align*}
+Thus, 
+\begin{align}
+    \nonumber \mathbb{E}\left(\sum_{i=1}^{N}g_i^{3}\right)=\sum_{i=1}^{N}& \bigg(L^{1}_{i,1}+[\alpha_1+(\alpha_0-\alpha_1)\phi_i(r)](L^{1}_{i,2}-2L^{1}_{i,1}+L^{2}_{i,1})\\
+    &+[\alpha_1+(\alpha_0-\alpha_1)\phi_i(r)]^2(L^{2}_{i,2}+L^{1}_{i,1}-L^{1}_{i,2}-L^{2}_{i,1})\bigg). \label{eq:ecv1}
+\end{align}
+Assuming  $\alpha_0=\alpha_1=0.5$ based on Mendel's second law,  Equation~\eqref{eq:ecv1} reduces to Equation~\eqref{eq:ecv_formula} claimed in the main article.
+\qed
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%
+% \section*{Formulations}
+\section*{Mathematical formulation for  single-trait parental selection}
+Following~\cite{han2017predicted}, we use the following notations in our integer programming (IP) formulation~\eqref{form1:single_trait}. We use  ECV as our objective function and add constraints to restrict inbreeding.
+ \paragraph{Parameters:}
+		\begin{itemize}
+			\item $K \in \mathbb{Z}_{\ge0}$: Number of individuals in the population
+			\item $N \in \mathbb{Z}_{\ge0}$: Number of QTL for the target trait
+			\item $G$: $K \times K$ genomic matrix of inbreeding values with elements $g_{k,k'}$ for $k, k' \in [K]$			
+			\item $\epsilon \in \mathbb{R_+}$: Inbreeding tolerance on a pair of selected individuals
+	\iffalse %% Definition of P commented
+			\item $P^k \in \mathbb{B}^{N\times2}$: The population matrix for each individual $k\in[K]$, where:
+	\begin{align*}
+		P_{i,j}^{k} &=
+		\left\{
+		\begin{array}{ll}
+		0, & \text{ if $L^{k}_{i,j} = 0$},\\
+		1, & \text{otherwise,}
+		\end{array}
+		\right. &\forall i \in [N], j \in [2].
+	\end{align*}
+	\fi
+		\end{itemize}
+\paragraph{Decision variables:}
+	\begin{itemize}
+		\item $t \in \mathbb{B}^{2\times K}$ representing the parental selection decision where,
+\begin{align*}
+	t_{m,k}=
+	\left\{
+	\begin{array}{ll}
+	1, & \text{if $k$-th individual is selected as $m$-th parent,}\\
+	0, & \text{otherwise,} 
+	\end{array}
+	\right. &\ \forall m \in [2],\ k \in [K].
+\end{align*}
+\item $x \in \mathbb{B}^{N\times4}$ representing genotypes of selected individuals. If we suppose that the $k$-th and $k'$-th individuals are selected as first and second parents respectively, i.e., $t_{1,k}=1$ and $t_{2,k'}=1$, then:
+\begin{align*}
+    x_{i,j} & = L^{k}_{i,j},&  \forall i \in [N],\ j \in \{1,2\}, \\
+    x_{i,j} &= L^{k'}_{i,j},&  \forall i \in [N],\ j \in \{3,4\}.
+\end{align*}
+\end{itemize}
+\paragraph{Objective function:} Using  Equation~\eqref{eq:ecv_formula} in the main article, the ECV can be expressed as a function of the decision variables as: $f(t,x)=0.25\sum\limits_{i=1}^{N}\sum\limits_{j=1}^4 x_{i,j}.$
+% \begin{align*} %\label{eq:ecv_obj}
+% f(t,x)=0.25\sum_{i=1}^{N} (x_{i,1}+x_{i,2}+x_{i,3}+x_{i,4}).
+% \end{align*}
+% The IP formulation for the single parental pair selection problem is as follows.
+\paragraph{Formulation:}
+\begin{subequations}
+\label{form1:single_trait}
+		\begin{align}
+	\label{eq.form1obj}	\max &\ 0.25\sum_{i=1}^{N}\sum_{j=1}^4 x_{i,j} \\
+		\textit{s.t.} \quad 
+		 \label{eq.selection_constr}\sum_{k = 1}^K t_{m,k} &= 1  &\forall m \in [2]\\ 
+		\label{eq.x_constr1}x_{i,j} &= \sum_{k = 1}^K t_{1,k}L_{i,j}^{k} &  \forall i \in[N], j\in \{1,2\} \\
+		\label{eq.x_constr2}x_{i,j} &= \sum_{k = 1}^K t_{2,k}L_{i,j-2}^{k} & \forall i \in[N], j\in \{3,4\}\\
+		  \label{eq.inbrd_const}t_{1,k}+t_{2,k'} &\leq 1 &\forall k,k'\in[K] \text{ such that }g_{k,k'}\ge \epsilon\\
+		\label{eq.tbin} t_{m,k} &\in \{0,1\} &\forall m\in [2], k \in [K]\\
+        \label{eq.xbin} x_{i,j} &\in \{0,1\} &\forall i\in [N], j \in [4]
+		\end{align}
+\end{subequations}
+
+The objective function~\eqref{eq.form1obj} maximizes the ECV. Constraint~\eqref{eq.selection_constr} ensures that exactly two individuals will be selected for the crossing. Constraints~\eqref{eq.x_constr1} and~\eqref{eq.x_constr2}  assign genotypic information in genotype matrices of the selected individuals to the $x_{i,j}$ variables. Constraint~\eqref{eq.inbrd_const} ensures that  two individuals with genomic relationship coefficient greater than the tolerance $\epsilon$ will not be selected simultaneously as parents. As the genomic relationship coefficient between any individual with itself has the highest value of one, this set of constraints will prevent self-crossing between individuals for any value of $\epsilon$ less than one. Finally, constraints~\eqref{eq.tbin} and~\eqref{eq.xbin} force decision variables to take binary values.
+
+\subsection*{Algorithm for selecting  multiple parental pairs}
+
+Suppose we are interested in finding $n_{c}$ different parental pairs from the population. Assuming that self-crossing is not allowed, we denote the number of feasible solutions (crosses) by $n_f$, which is bounded above by $\binom{K}{2}$. As we impose a constraint for controlling inbreeding, the number of feasible crosses might be strictly less than $\binom{K}{2}$. Specifically, the number of feasible solutions (feasible crosses) is precisely half the number of off-diagonal elements in matrix $G$ that are smaller than $\epsilon$.
+
+If there is no element in matrix $G$ that is smaller than $\epsilon$, then  $n_f=0$ and formulation~\eqref{form1:single_trait} is infeasible. In this case, we need to increase the value of tolerance $\epsilon$ such that there might be at least $n_f$ possible crosses for the selection. Then, any positive integer value for $n_c$ such that $n_c \leq n_f$ is suitable for our approach. 
+
+Assume that after solving the single-trait formulation~\eqref{form1:single_trait}, we find that in the optimal solution we have $t^*_{1,k}=t^*_{2,k'}=1$. This solution means that $k$-th and $k$'-th individuals are optimal parents that should be crossed. To obtain another pair of parents from the model, we can add the following ``conflict constraints'' to the single-parent single-trait formulation~\eqref{form1:single_trait}:
+\begin{equation}
+    	 t_{1,k}+t_{2,k'} \leq 1 \text{ and } t_{1,k'}+t_{2,k} \leq 1. \label{eq:MP_constr}
+\end{equation}
+These two constraints will exclude this  pair of individuals, $k, k'$, from being selected if we reoptimize formulation~\eqref{form1:single_trait} with these additional conflict constraints. We can repeat this procedure to find $n_{c}$ pairs by accumulating the appropriate set of conflict constraints corresponding to individuals selected in the previous iteration. The procedure is summarized in Algorithm~\ref{alg:multi_pair}.
+
+\begin{algorithm}[!ht]
+\caption{\label{alg:multi_pair}Finding multiple pairs for the parental selection problem}
+\begin{algorithmic}[1]
+\STATE \textbf{Input:} Appropriate $n_c$ (assumed to be no larger than $n_f$), $G, P, \epsilon$
+\STATE \textbf{Output:} Set $S$ of selected parental pairs
+\STATE $S \gets \emptyset$
+\WHILE{$|S| < n_{c}$}
+\STATE Solve formulation~\eqref{form1:single_trait} and obtain optimal solutions $t^*_{1,k}=t^*_{2,k'}=1$.
+\STATE Add the pair $\{k,k'\}$ to set $S$.
+\STATE Update the formulation by adding the constraints: $t_{1,k}+t_{2,k'} \leq 1$, $t_{1,k'}+t_{2,k} \leq 1$.
+\ENDWHILE
+\STATE \textbf{return} S
+\end{algorithmic}
+\end{algorithm}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%
+\section*{Mathematical formulation for multi-trait parental selection}
+
+\paragraph{Additional parameters:}
+		\begin{itemize}
+% 			\item $K \in \mathbb{Z}_{\ge0}$: Number of individuals in the population
+			\item $M \in \mathbb{Z}_{\ge0}$: Number of target traits for the breeding program
+			\item $N_{\ell} \in \mathbb{Z}_{\ge0}$: Number of QTL for the $\ell$-th trait $ \forall \ell \in [M]$
+% 			\item $G$: $K \times K$ genomic matrix of inbreeding values with elements $g_{k,k'}$ for $k, k' \in [K]$		
+% 			\item $\epsilon \in \mathbb{R}$: Inbreeding tolerance  for the   a pair of selected individuals
+
+\iffalse %% Definition of P commented
+			\item $P^{k,\ell} \in \mathbb{B}^{N_\ell\times2}$: The population matrix for each individual $k\in[K]$ and trait $\ell \in [M]$, where:
+	\begin{align*}
+		P_{i,j}^{k,\ell}=
+		\left\{
+		\begin{array}{ll}
+		0, & \text{ if $L^{k,\ell}_{i,j} = 0$},\\
+		1, & \text{otherwise,}
+		\end{array}
+		\right.&\forall i \in [N_{\ell}],\ j \in [2],
+	\end{align*}
+	where $L^{k,\ell}$ is the genotype matrix for $k$-th individual corresponding to the $\ell$-th trait.
+\fi
+		\end{itemize}
+ 		
+\paragraph{Additional decision variables:}
+	\begin{itemize}
+% 		\item $t \in \mathbb{B}^{2\times K}$ representing the parental selection decision such that:
+% \begin{align*}
+% 	t_{m,k}=
+% 	\left\{
+% 	\begin{array}{ll}
+% 	1, & \textrm{ if $k$-th individual is selected as $m$-th parent,}\\
+% 	& \quad\quad\quad\quad\quad\quad\quad\quad\quad\quad\quad\quad\quad\quad\quad\quad\quad\quad\quad\quad\quad\quad\quad\quad \forall m \in [2],\ k \in [K]\\	
+% 	0, & \textrm{otherwise.} 
+% 	\end{array}
+% 	\right.
+% \end{align*}
+\item $x^\ell \in \mathbb{B}^{N_\ell\times4}$ representing genotypes of selected individuals for each trait $\ell \in [M]$. If we suppose $k$-th and $k'$-th individuals are selected as first and second parents, so $t_{1,k}=1$ and $t_{2,k'}=1$, then:
+\begin{align*}
+    &x_{i,j}^\ell = L^{k,\ell}_{i,j} & \forall i \in [N_{\ell}],  j \in \{1,2\},  \ell \in [M],\\
+    &x_{i,j}^\ell = L^{k',\ell}_{i,j} & \forall i \in [N_{\ell}], j \in \{3,4\}, \ell \in [M].
+\end{align*}
+\end{itemize}
+\paragraph{Objective function:}
+We define the ECV corresponding to the $\ell$-th trait as a function of the decision variables as:
+$
+f_{\ell}(t,x^\ell)=0.25\sum\limits_{i=1}^{N_\ell}\sum\limits_{j =1}^4 x_{i,j}^\ell.
+$
+The components  of the objective function vector $F(t,x)=\langle f_1(t,x^1), \ldots,f_M(t,x^M)\rangle$ are in decreasing order of importance.  Thus, trait $\ell$ is more important than trait $\ell+1$, for each $\ell\in[M-1]$. Note that we denote the collection of variables $\langle x^1,\ldots,x^M\rangle$ succinctly as $x$.
+
+\paragraph{Formulation:}
+\begin{subequations}
+\label{form3:multi-trait}
+\begin{align}
+		\text{lexmax } F(t,x)&=\langle f_1(t,x^1), \ldots,f_M(t,x^M)\rangle, \label{form3.obj} \\
+		\textit{s.t.} \quad 
+		 \sum_{k = 1}^K t_{m,k} &= 1 &\forall m \in \{1,2\}\label{form3.t_var_constr}\\ 
+		x_{i,j}^{\ell} &= \sum_{k = 1}^K t_{1,k}L_{i,j}^{k,\ell}&\forall i \in[N_{\ell}],  j\in \{1,2\}, \ell \in[M]\label{form3.x_contsr1} \\
+		x_{i,j}^{\ell} &= \sum_{k = 1}^K t_{2,k}L_{i,j-2}^{k,\ell} &\forall i \in[N_{\ell}],  j\in \{3,4\}, \ell \in[M]\label{form3.x_contsr2}  \\
+		 t_{1,k}+t_{2,k^{'}} &\leq 1 &\forall k,k'\in[K]\text{ such that } g_{k,k'}\ge \epsilon \label{form3.inbreedeing_constr}\\
+		t_{m,k} &\in\{0,1\} &\forall m\in \{1,2\},  k \in [K]\label{form3.tbin}\\
+        x_{i,j}^\ell& \in\{0,1\} &\forall i\in [N_{\ell}],  j \in [4],  \ell \in[M]\label{form3.xbin}
+\end{align}
+\end{subequations}
+
+The multi-objective optimization  formulation~\eqref{form3:multi-trait} for the multi-trait parental selection problem lexicographically maximizes the vector of ECV functions corresponding to each trait. We describe this approach in greater detail in the next section. Constraint~\eqref{form3.t_var_constr} states that exactly two individuals will be selected for crossing. Constraints~\eqref{form3.x_contsr1} and~\eqref{form3.x_contsr2} will assign genotypes of selected individuals to $x_{i,j}^{\ell}$ variables. Constraint~\eqref{form3.inbreedeing_constr} implies that any two individuals with an inbreeding coefficient greater than tolerance $\epsilon$ can not be selected as parents for the crossing program. Note that since the inbreeding coefficient between any individual and itself has the highest value (which equals one), for any value of $\epsilon$ less than one, this set of constraints will prevent self-crossing between individuals. Finally, constraints~\eqref{form3.tbin} and~\eqref{form3.xbin} enforce decision variables to take binary values. 
+
+\subsection*{Lexicographic multi-objective optimization with degradation tolerances}
+
+Define a vector of tolerances $\tau = (\tau_1,\tau_2,\dots,\tau_M)$ such that $\tau_\ell\in [0,1]$ for all $\ell\in [M]$. Since we do not need degradation for the last objective, we set $\tau_M=0$. Tolerance $\tau_\ell$ represents the allowable degradation for the $\ell$-th objective function. Let us assume that  $\chi^1$ is the set of  feasible solutions based on the constraints of  formulation~\eqref{form3:multi-trait}. Let $z^*_1$ be the optimal objective value for the first objective function $f_1(t,x^1)$ over all feasible solutions in set $\chi^1$. That is,
+\begin{align}\label{eq.z*1}
+    z^*_1=\max\{f_1(t,x^1) \mid (t,x)\in \chi^1\}.
+\end{align}
+
+As the tolerance for the first objective is $\tau_1$, the set of feasible solutions for the second objective is given by:
+\begin{align}\label{eq.P2}
+    \chi^2=\{(t,x)\in \chi^1 \mid f_1(t,x^1) \ge (1-\tau_1)z^*_1\},
+\end{align}
+and the best objective value for the second objective function is:
+\begin{align}\label{eq.z*2}
+    z^*_2=\max\{f_2(t,x^2) \mid (t,x)\in \chi^2\}.    
+\end{align}
+Generally, the set of feasible solutions for the $\ell+1$-th objective function and its best objective value  are as follows:
+\begin{align}
+    \chi^{\ell+1}&=\{(t,x)\in \chi^{\ell} \mid f_{\ell}(t,x^{\ell}) \ge (1-\tau_{\ell})z^*_{\ell}\}&  \forall \ell \in [M-1], \label{eq.Pl}\\
+    z^*_{\ell+1}&=\max\{f_{\ell+1}(t,x^{\ell+1}) \mid (t,x)\in \chi^{\ell+1}\} &  \forall \ell \in [M-1].\label{eq.z*l}
+\end{align}
+The set of ``tolerance-optimal'' solutions for the problem is given by:
+\begin{align}\label{eq.P*}
+    \chi^*= \argmaxB_{(t,x)\in \chi^{M}} f_M(t,x^M).
+\end{align}
+% The lexicographic method outputs the value of $z_\ell^*$ as the value of the $\ell$-th objective function. Observe that objectives with lower values of $\ell$ are giving priority as the lower the value of $\ell$, the less restrictions there are for choosing decision variables to optimize the $\ell$-th objective. 
+
+By construction, the feasible sets satisfy the following relationship:
+\begin{align} \label{eq.P_subsets}
+    \chi^*\subseteq \chi^M\subseteq \chi^{M-1}\subseteq \cdots \subseteq \chi^2 \subseteq \chi^1.
+\end{align}
+ 
+
+% \begin{proof}
+% Let's assume $\chi^*=\chi^{M+1}$. For any $i \in \{2,3,\dots,M+1\}$, we want to prove the claim that $\chi^i \subseteq \chi^{i-1}$. Suppose $(t',x')\in \chi^i$. By definition of $\chi^i$ we know,
+% \begin{align*}
+%     \chi^i&=\{(t,x)\in \chi^{i-1} \mid (1-\tau_{i-1})z^*_{i-1} \leq f_{i-1}(t,x) \leq z^*_{i-1}\}.
+% \end{align*}
+% This implies that $(t',x')\in \chi^{i-1}$. Thus, $\chi^i \subseteq \chi^{i-1}, \ \forall i \in \{2,3,\dots,M+1\}$ and the proposition is correct.
+% \end{proof}
+
+% In multi-objective optimization the optimality criteria is commonly defined in terms of \emph{non-domination}. That is, a solution is non-dominated (or Pareto optimal) if there is no other feasible solution that can strictly improve at least one objective without worsen another objective at the same time. This notion is formalized as follows:
+
+An optimal solution in multi-objective optimization is called an \textit{efficient} or \textit{non-dominated} solution based on some domination structure chosen by the decision maker~\citep{sawaragi1985theory}. Arguably, the most well-known notion of efficiency is Pareto optimality. We say that the solution $(\hat t, \hat x)$ is Pareto optimal (or non-dominated) if there is no feasible solution $(t,x)$ to  Formulation~\eqref{form3:multi-trait} such that $F(t,x) \ge F(\hat t, \hat x)$ and $f_\ell(t,x) > f_\ell(\hat t, \hat x)$ for at least one trait $\ell$~\citep{Miettinen2016}.
+
+%The second condition implies that there exists $i \in [n]$ such that $y^1_i > y^2_i$.
+% \begin{definition} \label{definition 4.7}
+% \deleted{Suppose $y^1$ and $y^2 \in \mathbb{R}^n$ are two vectors of objective function values with respect to feasible solutions $x_1$ and $x_2$, respectively. For a maximization problem, we say $x_1$ dominates $x_2$ if $y^1_k \ge y^2_k, \ \forall k \in \{1,2,\dots,n\} \ \text{and} \   y^1 \neq y^2$.  We say that $x_1$ is a  non-dominated solution (Pareto optimal solution) if there is no feasible point that dominates $x_1$. Otherwise, $x_1$ is a dominated feasible solution.}
+% \end{definition} 
+
+As we show using the next result, the set of tolerance-optimal solutions $\chi^*$ is guaranteed to contain Pareto optimal solutions. Furthermore, if $(t,x)\in \chi^*$ then, either $(t,x)$ is Pareto optimal  or it is dominated by a Pareto optimal solution in $\chi^*$.
+
+
+\begin{proposition}\label{prop.P_dominant}
+Every solution $(t^*,x^*) \in \chi^*$ is either  Pareto optimal, or it is dominated by a Pareto optimal solution in $\chi^*$.
+\end{proposition}
+
+\begin{proof}
+If $(t^*,x^*) \in \chi^*$ is not  Pareto optimal, then there exists a Pareto optimal solution $(t',x') \in \chi^1$  that  dominates $(t^*,x^*)$. Note that the existence of such a solution follows from the finiteness of $\chi^1$. We prove that $(t',x') \in \chi^*$ by contradiction.
+
+Suppose $(t',x') \notin \chi^*$. Then, there exists $i \in [M]$ such that $(t',x') \in \chi^i$ and $(t',x') \notin \chi^{i+1}$ (where $\chi^{M+1}=\chi^*$). Therefore, 
+\begin{align} \label{eq:60}
+    f_{i}(t',x'^i) < (1-\tau_{i})z^*_{i}.
+\end{align}
+If $i=M$, we arrive at a contradiction   because inequality~\eqref{eq:60} implies that $(t',x')$ does not dominate $(t^*,x^*)$. (Recall that $\tau_M = 0$.)
+
+Now suppose, $i \in [M-1]$. By Equation~\eqref{eq.P_subsets}, we know that $(t^*,x^*) \in \chi^* \subseteq \chi^{i+1}$, and that, 
+\begin{align} \label{eq:61}
+    (1-\tau_{i})z^*_{i} \leq f_{i}(t^*,x^{*i}).
+\end{align}
+Inequalities~\eqref{eq:60} and~\eqref{eq:61} imply that, 
+\begin{align} \label{eq:62}
+    f_{i}(t',x'^i) < f_{i}(t^*,x^{*i}).
+\end{align}
+Again, contradicting the assumption that $(t',x')$ dominates $(t^*,x^*)$. This implies that \textit{every} Pareto optimal solution $(t',x')$ that dominates $(t^*,x^*)$ belongs to $\chi^*$.
+\end{proof}
+
+Based on Proposition~\ref{prop.P_dominant}, if we seek a Pareto optimal solution, we can guarantee the identification of one by carrying out an additional step and solving one more optimization problem given by: \[
+\max\left\{\sum_{\ell \in [M]}f_\ell(t,x^\ell) \mid (t,x) \in \chi^*\right\}.
+\]
+
+% \begin{proposition}\label{lexico.objective}
+% Let $(t',x')$ and $(t^*,x^*)$ be distinct solutions belonging to the tolerance-optimal set $\chi^*$ and suppose $(t^*,x^*)$ is a Pareto solution that dominates (t',x'). Then,
+% \begin{align*}
+%     (1-\tau_\ell)z^*_\ell \leq f_\ell(t',x'^{\ell}) & \leq f_\ell(t^*,x^{*\ell})&  \forall \ell \in [M],
+% \end{align*}
+% where $z^*_{\ell}$ is defined as \eqref{eq.z*l}. Specifically, $f_M(t',x'^{M}) = f_M(t^*,x^{*M}).$
+% \end{proposition}
+% \begin{proof}
+% As $(t',x') \in \chi^*$ and $\chi^* \subseteq \chi^{\ell}$ for every $\ell \in [M]$, we can conclude that  $(1-\tau_\ell)z^*_\ell \leq f_\ell(t',x'^{\ell})$ for every $\ell \in [M-1]$ and $f_\ell(t',x'^{M}) = z_M^*$. Using the fact that $(t^*,x^*)$  dominates $(t',x')$, we can conclude that $f_\ell(t',x'^{\ell}) \leq f_\ell(t^*,x^{*\ell})$ for every $\ell \in [M]$ by definition of Pareto optimality. By Equation~\eqref{eq.P*}, it is also trivial that all solution in set $\chi^*$ have same objective value in terms of objective function $f_M(t,x)$ and hence the proposition is proved.
+% \end{proof}
+
+% The last proposition implies the effectiveness of the chosen algorithm for our optimization procedure. Given the user's predefined tolerances, we ensure that the final solutions include at least one efficient solution and that all solutions are within an acceptable range for all objective functions with respect to the given tolerances.
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\begingroup
+\raggedright
+\bibliography{references}
+\endgroup
+
+\end{document}
+
+
+
+
+
+
+
